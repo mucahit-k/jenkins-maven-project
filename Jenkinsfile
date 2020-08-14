@@ -1,10 +1,30 @@
 pipeline {
-    agent { label 'master' }
+    agent {
+        docker {
+            image 'maven:3-openjdk-8'
+            args '-v /root/.m2:/root/.m2'
+        }
+    }
     stages {
-        stage('build') {
+        stage('Build') {
             steps {
-                echo 'Clarusway_Way to Reinvent Yourself'
-                sh 'echo Integrating Jenkins Pipeline with GitHub Webhook using Jenkinsfile'
+                sh 'mvn -B -DskipTests clean package'
+            }
+        }
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+            post {
+                always {
+                    junit 'target/surefire-reports/*.xml'
+                }
+            }
+        }
+        stage('Deliver') {
+            steps {
+                sh 'chmod +x deliver-script.sh'
+                sh './deliver-script.sh'
             }
         }
     }
